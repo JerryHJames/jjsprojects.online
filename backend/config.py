@@ -6,8 +6,16 @@ load_dotenv()
 
 # Supabase configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL")
+if not SUPABASE_URL:
+    raise ValueError("SUPABASE_URL environment variable is not set")
+
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+if not SUPABASE_SERVICE_KEY:
+    raise ValueError("SUPABASE_SERVICE_KEY environment variable is not set")
+
+# Database configuration
+DB_SCHEMA = "public"  # Explicitly set schema to public
 
 # Email configuration
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")

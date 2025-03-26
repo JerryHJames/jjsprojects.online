@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from supabase import create_client, Client
 from datetime import datetime
-from config import SUPABASE_URL, SUPABASE_SERVICE_KEY
+from config import SUPABASE_URL, SUPABASE_SERVICE_KEY, DB_SCHEMA
 from supabase.lib.client_options import ClientOptions
 from fastapi.responses import JSONResponse
 import os
@@ -45,9 +45,12 @@ app.add_middleware(
 
 # Initialize Supabase client with service key for admin operations
 try:
-    options = ClientOptions(schema="public")  # Explicitly set schema to public
+    options = ClientOptions(
+        schema=DB_SCHEMA,
+        headers={"apiKey": SUPABASE_SERVICE_KEY}
+    )
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY, options=options)
-    logger.info("Successfully connected to Supabase")
+    logger.info(f"Successfully connected to Supabase using schema: {DB_SCHEMA}")
 except Exception as e:
     logger.error(f"Error connecting to Supabase: {e}")
     raise
@@ -84,7 +87,7 @@ async def submit_contact(submission: ContactSubmission, request: Request):
 
         logger.info("Attempting to insert contact submission into database")
 
-        # Insert into Supabase
+        # Insert into Supabase with explicit schema
         result = supabase.table("contact_submissions").insert(submission_data).execute()
         logger.info(f"Successfully inserted submission with ID: {result.data[0]['id']}")
         
@@ -104,7 +107,7 @@ async def submit_contact(submission: ContactSubmission, request: Request):
 # Health check endpoint for Vercel
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "schema": DB_SCHEMA}
 
 if __name__ == "__main__":
     import uvicorn
