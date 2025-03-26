@@ -20,6 +20,7 @@ app = FastAPI(title="Contact Form API")
 allowed_origins = [
     "https://jjsprojects.online",  # Production domain
     "https://www.jjsprojects.online",  # Production www subdomain
+    "https://portfolio-jerryhj.vercel.app",  # Vercel deployment URL
 ]
 
 # Add localhost for development if not in production
@@ -28,14 +29,16 @@ if os.environ.get("VERCEL_ENV") != "production":
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
-        "http://127.0.0.1:8000"
+        "http://127.0.0.1:8000",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000"
     ])
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["POST"],  # Only allow POST for contact form
+    allow_methods=["POST", "GET", "OPTIONS"],  # Added OPTIONS for preflight requests
     allow_headers=["*"],
 )
 
