@@ -12,6 +12,7 @@ A modern, responsive portfolio website built for showcasing web development proj
 - [Customization](#customization)
 - [Deployment](#deployment)
 - [Future Enhancements](#future-enhancements)
+- [License]
 
 ## Overview
 
@@ -117,4 +118,15 @@ This project can be deployed to any web hosting service:
 
 ---
 
-Built with ❤️ by JJ Smith 
+## License
+
+This project is licensed under the MIT License.
+
+## Usage Restrictions
+
+While this project is available for viewing and learning purposes, please note the following restrictions:
+- Do not copy, modify, or redistribute the code without explicit permission.
+- This code is intended for personal use and reference only.
+
+
+Built with ❤️ by Jerry James
