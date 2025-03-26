@@ -82,27 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle form submission
-    function handleFormSubmit(e) {
-        e.preventDefault();
-        
-        // Basic form validation
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
-        const subject = document.getElementById('subject').value;
-        const message = document.getElementById('message').value;
-        
-        if (!name || !email || !subject || !message) {
-            alert('Please fill in all fields');
-            return;
-        }
-        
-        // In a real implementation, you would send the form data to a server
-        // For demonstration, we'll just show a success message
-        alert('Message sent successfully! I will get back to you soon.');
-        contactForm.reset();
-    }
-
     // Event Listeners
     window.addEventListener('scroll', handleHeaderScroll);
     window.addEventListener('scroll', highlightActiveSection);
@@ -113,10 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
         link.addEventListener('click', scrollToSection);
     });
     
-    if (contactForm) {
-        contactForm.addEventListener('submit', handleFormSubmit);
-    }
-
     // Initialize
     handleHeaderScroll();
     highlightActiveSection();
