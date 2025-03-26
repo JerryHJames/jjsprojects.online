@@ -1,10 +1,9 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from supabase import create_client, Client
 from datetime import datetime
-import re
-from config import SUPABASE_URL, SUPABASE_KEY
+from config import SUPABASE_URL, SUPABASE_SERVICE_KEY
 
 # Initialize FastAPI app
 app = FastAPI(title="Contact Form API")
@@ -25,8 +24,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Supabase client with anon key for public operations
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Initialize Supabase client with service key for admin operations
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 # Pydantic models
 class ContactSubmission(BaseModel):
@@ -34,12 +33,6 @@ class ContactSubmission(BaseModel):
     email: str
     subject: str
     message: str
-
-    @validator('email')
-    def validate_email(cls, v):
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", v):
-            raise ValueError('Invalid email format')
-        return v
 
 @app.post("/api/contact")
 async def submit_contact(submission: ContactSubmission, request: Request):
