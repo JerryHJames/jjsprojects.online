@@ -2,10 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactForm = document.getElementById('contact-form');
     const submitButton = contactForm.querySelector('button[type="submit"]');
     
-    // API URL configuration
-    const API_URL = window.location.hostname === 'localhost' 
-        ? 'http://127.0.0.1:8000'
-        : 'https://api.jjsprojects.online';
+    // API URL configuration - using relative path for production compatibility
+    const API_URL = '';  // Empty string for relative path
     
     contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -33,7 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         try {
-            const response = await fetch(`${API_URL}/api/contact`, {
+            console.log('Sending request to:', `/api/contact`);
+            console.log('Form data:', formData);
+            
+            const response = await fetch(`/api/contact`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             const result = await response.json();
+            console.log('Response:', result);
             
             if (!response.ok) {
                 throw new Error(result.detail || 'Failed to submit form');
@@ -52,9 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
             contactForm.reset();
             
         } catch (error) {
-            // Show error message
-            showNotification(error.message || 'Failed to send message. Please try again.', 'error');
-            console.error('Error:', error);
+            // Show error message with more details
+            console.error('Error details:', error);
+            showNotification(`Failed to send message: ${error.message}`, 'error');
             
         } finally {
             // Re-enable submit button

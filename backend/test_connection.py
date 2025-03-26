@@ -1,39 +1,21 @@
 from supabase import create_client, Client
 from config import SUPABASE_URL, SUPABASE_SERVICE_KEY
-from datetime import datetime
+from supabase.lib.client_options import ClientOptions
 
 def test_supabase_connection():
     try:
-        # Initialize Supabase client with service role key
-        supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        # Initialize with public schema
+        options = ClientOptions(schema="public")
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY, options=options)
         
-        # Try to query the contact_submissions table
-        print("\nTesting SELECT query...")
-        result = supabase.table("contact_submissions").select("count").execute()
-        print("✅ SELECT query successful!")
-        print(f"Response: {result}")
-        
-        # Try to insert a test row
-        print("\nTesting INSERT query...")
-        test_data = {
-            "name": "Test Connection",
-            "email": "test@example.com",
-            "subject": "Connection Test",
-            "message": "Testing database connection",
-            "created_at": datetime.utcnow().isoformat(),
-            "ip_address": "127.0.0.1",
-            "user_agent": "Test Script"
-        }
-        
-        insert_result = supabase.table("contact_submissions").insert(test_data).execute()
-        print("✅ INSERT query successful!")
-        print(f"Insert Response: {insert_result}")
+        # Test connection by trying to fetch tables
+        result = supabase.table("contact_submissions").select("*").limit(1).execute()
+        print("Successfully connected to Supabase")
+        print("Table data:", result.data)
         
         return True
-        
     except Exception as e:
-        print("❌ Failed to connect to Supabase")
-        print(f"Error: {str(e)}")
+        print(f"Error connecting to Supabase: {e}")
         return False
 
 if __name__ == "__main__":

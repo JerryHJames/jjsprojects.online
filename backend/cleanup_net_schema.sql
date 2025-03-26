@@ -1,3 +1,18 @@
+-- Drop any existing foreign key constraints
+DO $$ 
+DECLARE 
+    constraint_rec RECORD;
+BEGIN
+    FOR constraint_rec IN (
+        SELECT tc.constraint_name, tc.table_name
+        FROM information_schema.table_constraints tc
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND tc.table_schema = 'public'
+    ) LOOP
+        EXECUTE format('ALTER TABLE %I DROP CONSTRAINT %I', constraint_rec.table_name, constraint_rec.constraint_name);
+    END LOOP;
+END $$;
+
 -- Drop any existing triggers
 DO $$ 
 DECLARE 
@@ -13,18 +28,18 @@ BEGIN
     END LOOP;
 END $$;
 
--- Drop any existing functions
+-- Drop any existing functions (only in public schema)
 DO $$ 
 DECLARE 
     func_rec RECORD;
 BEGIN
     FOR func_rec IN (
-        SELECT proname, nspname
+        SELECT proname
         FROM pg_proc p
         JOIN pg_namespace n ON p.pronamespace = n.oid
-        WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+        WHERE n.nspname = 'public'
     ) LOOP
-        EXECUTE format('DROP FUNCTION IF EXISTS %I.%I() CASCADE', func_rec.nspname, func_rec.proname);
+        EXECUTE format('DROP FUNCTION IF EXISTS public.%I() CASCADE', func_rec.proname);
     END LOOP;
 END $$;
 
@@ -42,7 +57,12 @@ CREATE TABLE contact_submissions (
     email VARCHAR(255) NOT NULL,
     subject VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    read BOOLEAN NOT NULL DEFAULT FALSE,
+    replied BOOLEAN NOT NULL DEFAULT FALSE,
+    spam_score SMALLINT DEFAULT 0,
+    ip_address VARCHAR(45),
+    user_agent TEXT
 );
 
 -- Enable RLS

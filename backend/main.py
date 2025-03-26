@@ -4,28 +4,49 @@ from pydantic import BaseModel
 from supabase import create_client, Client
 from datetime import datetime
 from config import SUPABASE_URL, SUPABASE_SERVICE_KEY
+from supabase.lib.client_options import ClientOptions
+from fastapi.responses import JSONResponse
+import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(title="Contact Form API")
 
-# Configure CORS
-origins = [
-    "http://localhost:8000",
-    "http://localhost:3000",
-    "https://jjsprojects.online",
-    "https://www.jjsprojects.online"
+# Configure CORS - More restrictive for production
+allowed_origins = [
+    "https://jjsprojects.online",  # Production domain
+    "https://www.jjsprojects.online",  # Production www subdomain
 ]
+
+# Add localhost for development if not in production
+if os.environ.get("VERCEL_ENV") != "production":
+    allowed_origins.extend([
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ])
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["POST"],  # Only allow POST for contact form
     allow_headers=["*"],
 )
 
 # Initialize Supabase client with service key for admin operations
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+try:
+    options = ClientOptions(schema="public")  # Explicitly set schema to public
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY, options=options)
+    logger.info("Successfully connected to Supabase")
+except Exception as e:
+    logger.error(f"Error connecting to Supabase: {e}")
+    raise
 
 # Pydantic models
 class ContactSubmission(BaseModel):
@@ -37,23 +58,49 @@ class ContactSubmission(BaseModel):
 @app.post("/api/contact")
 async def submit_contact(submission: ContactSubmission, request: Request):
     try:
+        logger.info(f"Received submission from: {submission.email}")
+        
+        # Get client info
+        client_host = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+
         # Prepare submission data
         submission_data = {
             "name": submission.name,
             "email": submission.email,
             "subject": submission.subject,
             "message": submission.message,
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
+            "read": False,
+            "replied": False,
+            "spam_score": 0,
+            "ip_address": client_host,
+            "user_agent": user_agent
         }
+
+        logger.info("Attempting to insert contact submission into database")
 
         # Insert into Supabase
         result = supabase.table("contact_submissions").insert(submission_data).execute()
+        logger.info(f"Successfully inserted submission with ID: {result.data[0]['id']}")
         
-        return {"message": "Message submitted successfully", "id": result.data[0]["id"]}
+        return JSONResponse(
+            content={"message": "Message submitted successfully", "id": result.data[0]["id"]},
+            status_code=200
+        )
 
     except Exception as e:
-        print(f"Error: {str(e)}")  # Add this line for debugging
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = f"Error submitting contact form: {str(e)}"
+        logger.error(error_msg)
+        return JSONResponse(
+            content={"detail": error_msg},
+            status_code=500
+        )
+
+# Health check endpoint for Vercel
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn
