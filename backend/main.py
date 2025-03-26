@@ -20,7 +20,7 @@ app = FastAPI(title="Contact Form API")
 allowed_origins = [
     "https://jjsprojects.online",  # Production domain
     "https://www.jjsprojects.online",  # Production www subdomain
-    "https://portfolio-jerryhj.vercel.app",  # Vercel deployment URL
+    "https://jjsprojects-online.vercel.app",  # Vercel deployment URL
 ]
 
 # Add localhost for development if not in production
@@ -40,6 +40,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["POST", "GET", "OPTIONS"],  # Added OPTIONS for preflight requests
     allow_headers=["*"],
+    expose_headers=["*"]  # Added to expose headers if needed
 )
 
 # Initialize Supabase client with service key for admin operations
